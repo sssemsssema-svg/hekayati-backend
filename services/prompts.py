@@ -70,7 +70,8 @@ Scene 1 introduces the hero and the setup, the middle scenes advance the adventu
 Each scene represents ONE clear drawable moment that flows smoothly into the next.
 
 CHARACTER DESCRIPTION (for consistent visual art)
-In character_description write a concise English visual description of the hero {name} AND any recurring companions (age, face, hair, clothing style, colors, one distinctive accessory).
+In character_description write a concise English visual description of the hero {name} AND any recurring companions (age, face, hairstyle, clothing style and shape, one distinctive accessory).
+CRITICAL COLOR BAN: This is a 100% black and white coloring book. DO NOT mention ANY color words (NO red, blue, green, yellow, pink, purple, orange, black, brown, blonde) anywhere in character_description or scene_en. Describe clothing and hair ONLY by shape, style and cut (e.g. 'short spiky hair outline', 'wearing a hoodie over a crewneck t-shirt and loose trousers').
 Start each with a label like "Hero:", "Friend:", "Sister:".
 These descriptions remain strictly FIXED across all scenes so characters look identical in every page.
 
@@ -212,6 +213,15 @@ RETRY_EXTRA = {
 }
 
 
+import re
+
+def strip_color_words(text: str) -> str:
+    """Strips any accidental color adjectives so external image generators never add color."""
+    p = r'\b(red|blue|green|yellow|pink|purple|orange|brown|black|blonde|golden|gray|grey|dark|colored|colorful)\b'
+    res = re.sub(p, '', text, flags=re.IGNORECASE)
+    return re.sub(r'\s+', ' ', res).strip()
+
+
 def build_image_prompt(
     age_group: str,
     art_style: str,
@@ -221,35 +231,42 @@ def build_image_prompt(
 ) -> str:
     """Builds the exact image prompt tailored for external AI image generation, consistent across the book."""
     clean_text = narration_ar.replace('"', "'").strip()
+    clean_chars = strip_color_words(character_description)
+    clean_scene = strip_color_words(scene_en)
 
-    color_ban = (
-        "Strict coloring book rules: 100% pure black and white line art only, pure white background (#FFFFFF). "
-        "ABSOLUTELY NO COLORS: no yellow, no blue, no green, no red, no color fills on clothes, no color accents anywhere. "
-        "NO SOLID BLACK FILLS: all character hair must be completely WHITE with a black outline only (do NOT color hair black, no black hair fill), "
-        "all clothes and shapes must be hollow white outlines with no dark fills. Empty unshaded white spaces ready to color with crayons."
+    strict_bw_prefix = (
+        "Pure black and white coloring book page line art only. "
+        "STRICT ZERO-COLOR RULE: Completely uncolored, absolutely no color, no red, no blue, no green, no yellow, no orange, no color fills anywhere on clothes or background. "
+        "NO BLACK FILLS: Character hair and clothes must NOT be colored black. All hair is hollow white outline only with black borders. All clothes and shapes are hollow white outlines with pure white fill (#FFFFFF). "
     )
 
-    # RULE 1: For Toddlers (3-5), enforce the 2/3 illustration + 1/3 text area layout
+    text_banner = (
+        f'At the bottom, a dedicated clean solid white rectangular banner containing ONLY this exact Arabic story text written verbatim, letter-for-letter, with accurate Arabic spelling and zero changes or translation: "{clean_text}".'
+    )
+
+    # RULE 1: For Toddlers (3-5), 2/3 illustration + 1/3 text area layout
     if age_group == "3-5":
         theme_desc = TODDLER_THEME_DESCRIPTIONS.get(
             art_style, TODDLER_THEME_DESCRIPTIONS["chibi"]
         )
         return (
-            "Vertical children's coloring page layout (aspect ratio 3:4). "
+            f"{strict_bw_prefix}"
+            f"Vertical 3:4 children's coloring page layout. "
             f"The top two-thirds is an uncolored {theme_desc}. "
-            f"Characters (keep consistent across all pages): {character_description}. "
-            f"Scene: {scene_en}. "
-            f"{color_ban} "
-            f'The bottom one-third of the page is a dedicated solid pure white rectangular area containing ONLY this exact Arabic story text printed clearly in clean Arabic typography: "{clean_text}". The Arabic text must appear exactly word-for-word as written without any modifications, spelling changes, or translation.'
+            f"Characters (uniform across all pages): {clean_chars}. "
+            f"Scene: {clean_scene}. "
+            f"{text_banner}"
         )
 
-    # RULE 2: For Older kids & Teens (6-10, 11-16), full-page creative composition based on the story's art style
+    # RULE 2: For Older kids & Teens (6-10, 11-16), full-page creative composition based on style + verbatim text banner
     style_desc = OLDER_STYLE_DESCRIPTIONS.get(
         art_style, OLDER_STYLE_DESCRIPTIONS["classic"]
     )
     return (
-        f"Full-page {style_desc}. "
-        f"Characters (keep consistent across all pages): {character_description}. "
-        f"Scene: {scene_en}. "
-        f"{color_ban}"
+        f"{strict_bw_prefix}"
+        f"Vertical children's coloring page layout. "
+        f"The main illustration is a {style_desc}. "
+        f"Characters (uniform across all pages): {clean_chars}. "
+        f"Scene: {clean_scene}. "
+        f"{text_banner}"
     )
