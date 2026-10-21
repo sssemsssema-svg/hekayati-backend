@@ -75,6 +75,10 @@ CRITICAL COLOR BAN: This is a 100% black and white coloring book. DO NOT mention
 Start each with a label like "Hero:", "Friend:", "Sister:".
 These descriptions remain strictly FIXED across all scenes so characters look identical in every page.
 
+SETTING DESCRIPTION (for consistent environment across all scenes)
+In setting_description write a concise English visual description of the primary recurring location where the adventure takes place (e.g. 'A green neighborhood park with a giant ancient tree and simple wooden benches' or 'A cozy home kitchen with cabinets, a stove, and a round wooden table').
+All scenes must remain visually grounded in this setting or its natural continuation so the background does NOT randomly mutate from page to page.
+
 LANGUAGE
 - narration_ar: warm, engaging Modern Standard Arabic with natural rhythm, no diacritics, suitable to be read aloud.
 - scene_en: English, a concrete visual description of the visual scene (action, setting, characters present).
@@ -127,6 +131,7 @@ Return ONLY this JSON, nothing else:
 {{"safe": true, "reason": "", "title": "Arabic title that includes the name {name}",
  "transcript_ar": "faithful transcript of what was said",
  "character_description": "Hero: ... Friend: ... (English)",
+ "setting_description": "Fixed visual environment details: ... (English)",
  "scenes": [{{"narration_ar": "...", "scene_en": "..."}}]}}
 """
 
@@ -228,10 +233,14 @@ def build_image_prompt(
     character_description: str,
     scene_en: str,
     narration_ar: str = "",
+    setting_description: str = "",
+    page_number: int = 1,
+    total_pages: int = 10,
 ) -> str:
     """Builds the exact image prompt tailored for external AI image generation, consistent across the book."""
     clean_text = narration_ar.replace('"', "'").strip()
     clean_chars = strip_color_words(character_description)
+    clean_setting = strip_color_words(setting_description)
     clean_scene = strip_color_words(scene_en)
 
     strict_bw_prefix = (
@@ -239,6 +248,14 @@ def build_image_prompt(
         "STRICT ZERO-COLOR RULE: Completely uncolored, absolutely no color, no red, no blue, no green, no yellow, no orange, no color fills anywhere on clothes or background. "
         "NO BLACK FILLS: Character hair and clothes must NOT be colored black. All hair is hollow white outline only with black borders. All clothes and shapes are hollow white outlines with pure white fill (#FFFFFF). "
     )
+
+    continuity_directive = (
+        f"Sequential Storybook Page (Page {page_number} of {total_pages}). "
+        "MANDATORY VISUAL CONTINUITY: The characters and environment MUST be 100% visually identical in every page of this book. "
+        "No character appearance changes, no clothing changes, do not alter hairstyle or face shape across pages. "
+    )
+
+    setting_part = f"Setting/Location (strictly consistent environment across pages): {clean_setting}. " if clean_setting else ""
 
     text_banner = (
         f'At the bottom, a dedicated clean solid white rectangular banner containing ONLY this exact Arabic story text written verbatim, letter-for-letter, with accurate Arabic spelling and zero changes or translation: "{clean_text}".'
@@ -251,10 +268,12 @@ def build_image_prompt(
         )
         return (
             f"{strict_bw_prefix}"
+            f"{continuity_directive}"
             f"Vertical 3:4 children's coloring page layout. "
             f"The top two-thirds is an uncolored {theme_desc}. "
             f"Characters (uniform across all pages): {clean_chars}. "
-            f"Scene: {clean_scene}. "
+            f"{setting_part}"
+            f"Scene {page_number}: {clean_scene}. "
             f"{text_banner}"
         )
 
@@ -264,9 +283,11 @@ def build_image_prompt(
     )
     return (
         f"{strict_bw_prefix}"
+        f"{continuity_directive}"
         f"Vertical children's coloring page layout. "
         f"The main illustration is a {style_desc}. "
         f"Characters (uniform across all pages): {clean_chars}. "
-        f"Scene: {clean_scene}. "
+        f"{setting_part}"
+        f"Scene {page_number}: {clean_scene}. "
         f"{text_banner}"
     )
