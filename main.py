@@ -23,6 +23,7 @@ from services.prompts import (
     IMAGINATION,
     clean_name,
 )
+from services.single_art_service import generate_single_art
 from services.story_service import make_story
 from utils import mime_for
 
@@ -182,6 +183,48 @@ def install_page():
   </div>
 </body>
 </html>"""
+
+
+@app.post("/create-single-art")
+async def create_single_art(
+    request: Request,
+    age_group: str = Form("11-16"),
+    gender: str = Form("boy"),
+    art_style: str = Form("manga"),
+    description_text: str = Form(""),
+    include_text: bool = Form(False),
+    audio: UploadFile = File(None),
+):
+    check_rate(request.client.host if request.client else "unknown")
+    audio_bytes = None
+    mime = ""
+    if audio and audio.filename:
+        audio_bytes = await audio.read()
+        mime = mime_for(audio.filename)
+
+    if not audio_bytes and not description_text.strip():
+        raise HTTPException(400, "Please provide audio recording or text description")
+
+    try:
+        res = await generate_single_art(
+            age_group=age_group,
+            gender=gender,
+            art_style=art_style,
+            audio_bytes=audio_bytes,
+            mime_type=mime,
+            text_description=description_text,
+            include_text=include_text,
+        )
+        return {
+            "title": res.title,
+            "concept_ar": res.concept_ar,
+            "concept_en": res.concept_en,
+            "art_style": res.art_style,
+            "prompt_en": res.prompt_en,
+        }
+    except Exception as e:
+        log.exception("create_single_art failed: %s", e)
+        raise HTTPException(500, "Failed to generate single art prompt")
 
 
 @app.post("/create-book")

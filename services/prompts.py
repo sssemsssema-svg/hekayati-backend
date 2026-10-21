@@ -3,29 +3,39 @@ import random
 import re
 
 # ---------------------------------------------------------------- inputs
-GENDERS = {"boy", "girl"}
-AGE_GROUPS = {"3-5", "6-10", "11-16"}
-ART_STYLES = {"classic", "manga", "mandala", "sketch", "chibi", "storybook", "doodle", "random"}
+GENDERS = {"boy", "girl", "neutral"}
+AGE_GROUPS = {"3-5", "6-10", "11-16", "adult"}
+
+TODDLER_STYLES = ["chibi", "storybook", "doodle", "cartoon"]
+OLDER_STYLES = [
+    "manga",
+    "comic",
+    "webtoon",
+    "mandala",
+    "sketch",
+    "popart",
+    "fantasy",
+    "pixel",
+    "classic",
+]
+ART_STYLES = set(TODDLER_STYLES + OLDER_STYLES + ["random"])
 IMAGINATION = {"exact", "ai"}
 DEFAULT_IMAGINATION = "ai"
-DEFAULT_ART_STYLE = "classic"
-
-TODDLER_STYLES = ["chibi", "storybook", "doodle"]
-OLDER_STYLES = ["manga", "mandala", "sketch", "classic"]
+DEFAULT_ART_STYLE = "manga"
 
 
 def pick_style_for_story(age_group: str, requested_style: str = "") -> str:
-    """Picks a single art style that stays 100% consistent across all pages of this specific story."""
+    """Picks an art style for the story or single artwork."""
     if requested_style and requested_style not in ("random", "", "auto"):
         return requested_style
 
-    # Randomly pick a style for this story so every new book has a fresh look
+    # Randomly pick a style to give a varied creative experience every time
     if age_group == "3-5":
         return random.choice(TODDLER_STYLES)
-    elif age_group == "11-16":
-        return random.choice(["manga", "sketch", "mandala"])
+    elif age_group in ("11-16", "adult"):
+        return random.choice(["manga", "comic", "webtoon", "mandala", "sketch", "popart", "fantasy"])
     else:
-        return random.choice(OLDER_STYLES)
+        return random.choice(["classic", "comic", "manga", "sketch", "fantasy"])
 
 
 def clean_name(name: str) -> str:
@@ -177,11 +187,17 @@ TODDLER_THEME_DESCRIPTIONS = {
         "strictly 100% black and white only, pure white fill, zero colors, no colored clothes, no colored objects. "
         "Hair and clothing must be hollow unshaded white outlines with no black fill, no solid black areas, no shading, no grayscale, Pure White Background (#FFFFFF)"
     ),
+    "cartoon": (
+        "cheerful cartoon adventure coloring page for toddlers, friendly round animals and cute children, "
+        "extra-bold clean black outlines, large simple closed shapes easy for small children to color, "
+        "strictly 100% black and white only, pure white fill, zero colors. "
+        "Hair and clothes are hollow white outlines, no solid black fills, no shading, Pure White Background (#FFFFFF)"
+    ),
 }
 
 OLDER_STYLE_DESCRIPTIONS = {
     "classic": (
-        "detailed children's adventure coloring book page, clean uniform crisp black ink outlines, "
+        "detailed adventure coloring book page, clean uniform crisp black ink outlines, "
         "strictly 100% black and white line art only, completely uncolored, all shapes closed with pure white fill, "
         "absolutely no colors, no yellow, no blue, no green, zero color accents. "
         "Hair and clothing must NOT be filled with solid black: hair is hollow white with black outlines only, "
@@ -195,18 +211,48 @@ OLDER_STYLE_DESCRIPTIONS = {
         "no solid black hair, no solid black clothing fills, absolutely no shading, no screentones, no hatching, "
         "no cross-hatching, no gradients, no grayscale, Pure White Background (#FFFFFF)"
     ),
+    "comic": (
+        "action-packed comic book and graphic novel style coloring page, bold dynamic superhero and adventure line art, "
+        "dramatic perspective, powerful clean black outlines, "
+        "strictly 100% black and white line art only, completely uncolored, pure white interior fills, zero colors, no color fills. "
+        "Hollow unshaded white hair and clothing outlines, no solid black hair, no shading, no screentones, Pure White Background (#FFFFFF)"
+    ),
+    "webtoon": (
+        "stylish modern webtoon and manhwa line art coloring page, trendy youth fashion, clean sharp digital inking, "
+        "expressive character design and sleek backgrounds, "
+        "strictly 100% black and white line art only, completely uncolored, pure white interiors, zero colors. "
+        "Hollow white hair outlines only with zero black fill, no solid black clothing, no shading, no grayscale, Pure White Background (#FFFFFF)"
+    ),
     "mandala": (
-        "intricate mandala and zen-pattern coloring page, beautiful geometric and floral mandala line art patterns "
-        "harmoniously integrated with the characters and scene, elegant clean uniform black outlines, "
+        "intricate mandala and meditative zen-pattern coloring page, beautiful geometric and floral mandala line art patterns "
+        "harmoniously integrated with the scene, elegant clean uniform black outlines, meditative and relaxing detailed line art, "
         "strictly 100% black and white line art only, completely uncolored, pure white fills, zero colors. "
         "All shapes hollow and white ready to color, no solid black filled areas, no solid black hair, "
         "zero shading, zero gradients, zero grayscale, zero textures, Pure White Background (#FFFFFF)"
     ),
     "sketch": (
-        "creative teen sketchbook and graphic novel line art illustration, stylish modern ink linework, "
-        "clean unshaded black line art meant for coloring, strictly 100% black and white only, completely uncolored, "
-        "zero colors, no colored garments. Hair and clothing must be hollow white outlines with no black fill, "
-        "no solid black hair, no shading, no gray tones, no gradients, no screentones, Pure White Background (#FFFFFF)"
+        "creative teen sketchbook and urban line art illustration, stylish modern ink linework, "
+        "expressive character design, dynamic perspectives, clean unshaded black line art meant for coloring, "
+        "strictly 100% black and white only, completely uncolored, zero colors, no colored garments. "
+        "Hair and clothing must be hollow white outlines with no black fill, no solid black hair, no shading, no gray tones, Pure White Background (#FFFFFF)"
+    ),
+    "popart": (
+        "energetic pop art and modern street doodle coloring page, fun urban elements, playful stickers, graffiti-inspired clean outlines, "
+        "bold and punchy black lines, youthful and trendy aesthetic, "
+        "strictly 100% black and white only, completely uncolored, pure white fills, zero colors. "
+        "Hollow white outlines for all characters and doodles, no solid black fills, no shading, Pure White Background (#FFFFFF)"
+    ),
+    "fantasy": (
+        "epic fantasy adventure coloring book page, mythical creatures, enchanted castle landscapes, magical artifacts and nature, "
+        "intricate crisp black ink outlines with majestic atmospheric linework, "
+        "strictly 100% black and white line art only, completely uncolored, pure white fills, zero colors. "
+        "All characters and creatures have hollow unshaded white outlines, no solid black fills, no shading, Pure White Background (#FFFFFF)"
+    ),
+    "pixel": (
+        "retro gaming and 16-bit arcade pixel art line drawing coloring page, nostalgic game-inspired outlines, "
+        "crisp geometric pixel-grid line art, fun adventure sprites and platforms, "
+        "strictly 100% black and white only, completely uncolored, pure white fills, zero colors. "
+        "All sprites hollow white outlines, no solid black fills, no shading, Pure White Background (#FFFFFF)"
     ),
 }
 
@@ -290,4 +336,51 @@ def build_image_prompt(
         f"{setting_part}"
         f"Scene {page_number}: {clean_scene}. "
         f"{text_banner}"
+    )
+
+
+def build_single_art_prompt(
+    age_group: str,
+    gender: str,
+    art_style: str,
+    concept_description: str,
+    include_text_banner: bool = False,
+    text_to_print: str = "",
+) -> str:
+    """Builds a standalone, ultra-detailed coloring poster prompt for a single artwork based on user voice/text description."""
+    clean_desc = strip_color_words(concept_description)
+    clean_text = text_to_print.replace('"', "'").strip()
+
+    strict_bw_prefix = (
+        "Masterpiece coloring book page, single full-page composition. "
+        "STRICT 100% PURE BLACK AND WHITE LINE ART ONLY. Pure white paper background (#FFFFFF). "
+        "ABSOLUTELY ZERO COLORS: No red, no blue, no green, no yellow, no orange, no color fills anywhere on clothes or background. "
+        "NO SOLID BLACK FILLS: Character hair, clothing, and shapes must NOT be filled with solid black ink. "
+        "All hair is hollow white outline with clean black borders. All shapes are hollow and unshaded with pure white inside, waiting to be colored. "
+    )
+
+    if age_group == "3-5":
+        style_desc = TODDLER_THEME_DESCRIPTIONS.get(
+            art_style, TODDLER_THEME_DESCRIPTIONS["chibi"]
+        )
+    else:
+        style_desc = OLDER_STYLE_DESCRIPTIONS.get(
+            art_style, OLDER_STYLE_DESCRIPTIONS["manga"]
+        )
+
+    text_part = ""
+    if include_text_banner and clean_text:
+        text_part = (
+            f' At the bottom, a dedicated clean solid white rectangular banner containing ONLY this exact Arabic text written verbatim, letter-for-letter, with accurate Arabic spelling and zero changes: "{clean_text}".'
+        )
+
+    gender_target = "girl / feminine aesthetic" if gender == "girl" else ("boy / energetic action aesthetic" if gender == "boy" else "general universal aesthetic")
+
+    return (
+        f"{strict_bw_prefix}"
+        f"Art Style: {style_desc}. "
+        f"Subject & Scene: {clean_desc}. "
+        f"Target Audience: {age_group} years old ({gender_target}). "
+        f"Composition: High quality coloring poster, crisp uniform black inking, all outlines closed and ready for coloring. "
+        f"{text_part}"
     )
