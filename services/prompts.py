@@ -153,44 +153,54 @@ def build_story_prompt(name: str, gender: str, age_group: str, imagination: str,
 # ---------------------------------------------------------------- image prompts
 TODDLER_THEME_DESCRIPTIONS = {
     "chibi": (
-        "cute chibi toy world style children's coloring book page, adorable round friendly human toddler characters, "
-        "ultra-thick bold uniform black outlines, very large simple closed shapes, wide empty areas to color, "
-        "line art only, no shading, no grayscale, no hatching, Pure White Background (#FFFFFF)"
+        "cute chibi toy world children's coloring book page, adorable round friendly human toddler characters, "
+        "ultra-thick bold clean black outlines only, strictly 100% black and white, pure white background and white interiors, "
+        "completely uncolored, absolutely no color, no yellow, no blue, no green, no red, zero color accents. "
+        "Hair and clothes must NOT be filled with black: all hair must be white with a clean black outline, hollow outlines only, "
+        "no solid black fills, no shading, no grayscale, no hatching, Pure White Background (#FFFFFF)"
     ),
     "storybook": (
         "cozy nature storybook coloring page for toddlers, cheerful cartoon clouds, smiling sun, big simple flowers and trees, "
-        "very thick bold smooth black outlines, simple friendly human toddler characters, wide open coloring spaces, "
-        "line art only, no shading, no grayscale, Pure White Background (#FFFFFF)"
+        "ultra-thick bold smooth black line art, simple friendly human toddler characters, "
+        "strictly 100% black and white only, pure white fill, completely uncolored, zero colors, no color fills anywhere. "
+        "Hair must NOT be filled with black, hair is hollow white outline only, no solid black filled areas, no shading, no grayscale, Pure White Background (#FFFFFF)"
     ),
     "doodle": (
         "kawaii doodle style children's coloring book page, cheerful playful shapes, simple cute stars and hearts doodles, "
-        "bold clean uniform black line art, cute simple human toddler character, wide coloring spaces, "
-        "no shading, no grayscale, Pure White Background (#FFFFFF)"
+        "bold clean uniform black line art, cute simple human toddler character, "
+        "strictly 100% black and white only, pure white fill, zero colors, no colored clothes, no colored objects. "
+        "Hair and clothing must be hollow unshaded white outlines with no black fill, no solid black areas, no shading, no grayscale, Pure White Background (#FFFFFF)"
     ),
 }
 
 OLDER_STYLE_DESCRIPTIONS = {
     "classic": (
         "detailed children's adventure coloring book page, clean uniform crisp black ink outlines, "
-        "line art only, all shapes closed, uncolored coloring page, no shading, no grayscale, no hatching, "
-        "no textures, no filled black areas, Pure White Background (#FFFFFF)"
+        "strictly 100% black and white line art only, completely uncolored, all shapes closed with pure white fill, "
+        "absolutely no colors, no yellow, no blue, no green, zero color accents. "
+        "Hair and clothing must NOT be filled with solid black: hair is hollow white with black outlines only, "
+        "no solid black fills, no shading, no grayscale, no hatching, no textures, Pure White Background (#FFFFFF)"
     ),
     "manga": (
-        "dynamic manga and anime comic panel illustration, professional clean black ink line art, "
-        "crisp black outlines of even weight, expressive anime-style characters with detailed hair and dynamic poses, "
-        "uncolored line art coloring page, all shapes closed, absolutely no shading, no screentones, no hatching, "
-        "no cross-hatching, no gradients, no grayscale, no filled black areas, Pure White Background (#FFFFFF)"
+        "dynamic manga and anime comic panel coloring page, professional clean black ink line art, "
+        "crisp black outlines of even weight, expressive anime-style characters with detailed hair outlines, "
+        "strictly 100% black and white line art only, completely uncolored, pure white interiors, zero colors, no color accents. "
+        "Hair must NOT be filled with solid black: hair is white with clean black outlines only, "
+        "no solid black hair, no solid black clothing fills, absolutely no shading, no screentones, no hatching, "
+        "no cross-hatching, no gradients, no grayscale, Pure White Background (#FFFFFF)"
     ),
     "mandala": (
         "intricate mandala and zen-pattern coloring page, beautiful geometric and floral mandala line art patterns "
         "harmoniously integrated with the characters and scene, elegant clean uniform black outlines, "
-        "meditative and relaxing detailed line art, all shapes fully closed for coloring, "
+        "strictly 100% black and white line art only, completely uncolored, pure white fills, zero colors. "
+        "All shapes hollow and white ready to color, no solid black filled areas, no solid black hair, "
         "zero shading, zero gradients, zero grayscale, zero textures, Pure White Background (#FFFFFF)"
     ),
     "sketch": (
         "creative teen sketchbook and graphic novel line art illustration, stylish modern ink linework, "
-        "expressive character design, dynamic perspectives, clean unshaded black line art meant for coloring, "
-        "no shading, no gray tones, no gradients, no screentones, Pure White Background (#FFFFFF)"
+        "clean unshaded black line art meant for coloring, strictly 100% black and white only, completely uncolored, "
+        "zero colors, no colored garments. Hair and clothing must be hollow white outlines with no black fill, "
+        "no solid black hair, no shading, no gray tones, no gradients, no screentones, Pure White Background (#FFFFFF)"
     ),
 }
 
@@ -210,18 +220,27 @@ def build_image_prompt(
     narration_ar: str = "",
 ) -> str:
     """Builds the exact image prompt tailored for external AI image generation, consistent across the book."""
+    clean_text = narration_ar.replace('"', "'").strip()
+
+    color_ban = (
+        "Strict coloring book rules: 100% pure black and white line art only, pure white background (#FFFFFF). "
+        "ABSOLUTELY NO COLORS: no yellow, no blue, no green, no red, no color fills on clothes, no color accents anywhere. "
+        "NO SOLID BLACK FILLS: all character hair must be completely WHITE with a black outline only (do NOT color hair black, no black hair fill), "
+        "all clothes and shapes must be hollow white outlines with no dark fills. Empty unshaded white spaces ready to color with crayons."
+    )
+
     # RULE 1: For Toddlers (3-5), enforce the 2/3 illustration + 1/3 text area layout
     if age_group == "3-5":
-        clean_text = narration_ar.replace('"', "'").strip()
         theme_desc = TODDLER_THEME_DESCRIPTIONS.get(
             art_style, TODDLER_THEME_DESCRIPTIONS["chibi"]
         )
         return (
             "Vertical children's coloring page layout (aspect ratio 3:4). "
-            f"The top two-thirds is a {theme_desc}. "
+            f"The top two-thirds is an uncolored {theme_desc}. "
             f"Characters (keep consistent across all pages): {character_description}. "
             f"Scene: {scene_en}. "
-            f"The bottom one-third of the page is a clean dedicated blank white text area featuring the story text: \"{clean_text}\"."
+            f"{color_ban} "
+            f'The bottom one-third of the page is a dedicated solid pure white rectangular area containing ONLY this exact Arabic story text printed clearly in clean Arabic typography: "{clean_text}". The Arabic text must appear exactly word-for-word as written without any modifications, spelling changes, or translation.'
         )
 
     # RULE 2: For Older kids & Teens (6-10, 11-16), full-page creative composition based on the story's art style
@@ -231,5 +250,6 @@ def build_image_prompt(
     return (
         f"Full-page {style_desc}. "
         f"Characters (keep consistent across all pages): {character_description}. "
-        f"Scene: {scene_en}."
+        f"Scene: {scene_en}. "
+        f"{color_ban}"
     )
