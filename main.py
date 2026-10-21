@@ -7,7 +7,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 import config
 from services.image_service import _mock_image
@@ -138,6 +140,48 @@ async def run_job(job_id: str, audio: bytes, mime: str, name: str, gender: str,
 @app.get("/health")
 def health():
     return {"ok": True}
+
+
+@app.get("/download-apk")
+@app.get("/apk")
+def download_apk():
+    apk_path = Path(r"C:\Users\Asmaa\Desktop\hekayati-premium.apk")
+    if not apk_path.exists():
+        raise HTTPException(404, "APK not found on Desktop")
+    return FileResponse(
+        path=str(apk_path),
+        filename="hekayati-premium.apk",
+        media_type="application/vnd.android.package-archive",
+    )
+
+
+@app.get("/install", response_class=HTMLResponse)
+def install_page():
+    return """<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>تحميل تطبيق حكاياتي الملونة</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 40px 20px; background: #fdf8ff; color: #333; margin: 0; }
+    .card { background: white; padding: 36px 24px; border-radius: 24px; box-shadow: 0 10px 30px rgba(126,34,206,0.12); max-width: 380px; margin: 40px auto; border: 1px solid #f3e8ff; }
+    h1 { color: #6b21a8; margin: 12px 0; font-size: 24px; }
+    p { color: #6b7280; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0; }
+    .btn { display: block; background: linear-gradient(135deg, #9333ea, #7e22ce); color: white; padding: 16px 24px; border-radius: 14px; text-decoration: none; font-size: 17px; font-weight: bold; box-shadow: 0 6px 16px rgba(126,34,206,0.35); }
+    .badge { display: inline-block; background: #faf5ff; color: #7e22ce; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 16px; border: 1px solid #e9d5ff; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div style="font-size: 64px;">🎨📖</div>
+    <h1>تطبيق حكاياتي الملونة</h1>
+    <div class="badge">النسخة المحدثة جاهزة للتحميل ✨</div>
+    <p>تتضمن ميزة رفع الصور وتجميعها في كتيب PDF وتثبيت الشخصيات والأماكن بدقة عالية.</p>
+    <a href="/download-apk" class="btn">تحميل التطبيق الآن (APK) ⬇️</a>
+  </div>
+</body>
+</html>"""
 
 
 @app.post("/create-book")
