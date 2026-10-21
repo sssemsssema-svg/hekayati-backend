@@ -15,7 +15,11 @@ FONT = "AR"
 _registered = False
 
 # font size range per age group (3-5 = bigger text, fewer words)
-FONT_SIZES = {"3-5": (30, 20), "6-10": (22, 14)}  # (start, minimum)
+FONT_SIZES = {
+    "3-5": (30, 20),
+    "6-10": (22, 14),
+    "11-16": (18, 12),
+}  # (start, minimum)
 
 
 def _ensure_font():
@@ -71,7 +75,7 @@ def build_pdf(title: str, pages: list, out_path: str,
     W, H = A4
     m = 1.5 * cm
     half = H / 2
-    start, minimum = FONT_SIZES[age_group]
+    start, minimum = FONT_SIZES.get(age_group, (20, 14))
 
     c = canvas.Canvas(out_path, pagesize=A4)
     c.setTitle(title)
