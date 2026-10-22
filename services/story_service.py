@@ -1,5 +1,5 @@
 import json
-from typing import List
+from typing import List, Optional
 
 from google import genai
 from google.genai import types
@@ -35,13 +35,14 @@ class Story(BaseModel):
 
 
 async def make_story(
-    audio_bytes: bytes,
-    mime_type: str,
-    name: str,
-    gender: str,
-    age_group: str,
-    imagination: str,
+    audio_bytes: Optional[bytes] = None,
+    mime_type: str = "",
+    name: str = "",
+    gender: str = "boy",
+    age_group: str = "6-10",
+    imagination: str = "ai",
     art_style: str = "classic",
+    text_prompt: str = "",
 ) -> Story:
     # 1. Pick a single, consistent art style for this story (uniform across all pages)
     chosen_style = pick_style_for_story(age_group, art_style)
@@ -51,14 +52,23 @@ async def make_story(
     temperature = 0.3 if imagination == "exact" else 0.6
     last_error = None
 
+    # Prepare contents: audio and/or text
+    contents = []
+    if audio_bytes and len(audio_bytes) > 0:
+        contents.append(types.Part.from_bytes(data=audio_bytes, mime_type=mime_type or "audio/wav"))
+        if text_prompt.strip():
+            contents.append(f"Story idea / context from customer: {text_prompt.strip()}.")
+        contents.append(f"Listen to the recording and write the story for {clean_name(name)}. Follow all instructions carefully.")
+    elif text_prompt.strip():
+        contents.append(f"Write the coloring story for {clean_name(name)} based on this customer idea/description: {text_prompt.strip()}. Follow all instructions carefully.")
+    else:
+        contents.append(f"Create a delightful original coloring story for {clean_name(name)}. Follow all instructions carefully.")
+
     for _ in range(2):  # one retry on invalid JSON
         try:
             resp = await client.aio.models.generate_content(
                 model=config.TEXT_MODEL,
-                contents=[
-                    types.Part.from_bytes(data=audio_bytes, mime_type=mime_type),
-                    f"Listen to the recording and write the story for {clean_name(name)}. Follow all instructions carefully.",
-                ],
+                contents=contents,
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
                     response_mime_type="application/json",
