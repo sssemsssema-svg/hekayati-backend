@@ -1,5 +1,5 @@
 # مشروع «حكاياتي الملونة» (My Colorful Tales) — النسخة الأحدث الكاملة والشغالة فعلياً
-تاريخ الإصدار: 2026-10-24 05:01
+تاريخ الإصدار: 2026-10-24 05:37
 الحالة: شغال ومختبر 100% (Backend FastAPI + Flutter Mobile App + Web Booking Portal)
 
 ---
@@ -2131,6 +2131,145 @@ def download_code():
 
 PLAYBOOK_PATH = Path(__file__).resolve().parent / "hekayati_playbook.md"
 BUILD_LOG_PATH = Path(__file__).resolve().parent / "BUILD_LOG.md"
+LATEST_MD_PATH = Path(__file__).resolve().parent / "hekayati_latest.md"
+
+
+@app.get("/download-latest-md")
+@app.get("/latest.md")
+def download_latest_md():
+    if not LATEST_MD_PATH.exists():
+        raise HTTPException(404, "Latest MD not found")
+    return FileResponse(
+        path=str(LATEST_MD_PATH),
+        filename="hekayati_latest.md",
+        media_type="text/markdown; charset=utf-8",
+    )
+
+
+@app.get("/latest", response_class=HTMLResponse)
+def view_latest_md():
+    if not LATEST_MD_PATH.exists():
+        raise HTTPException(404, "Latest MD not found")
+    content = LATEST_MD_PATH.read_text(encoding="utf-8")
+    content_escaped = content.replace("\\", "\\\\").replace("`", "\\`").replace("$", "\\$")
+    return f"""<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>حكاياتي الملونة - كود النسخة الحالية الشغالة (hekayati_latest.md)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <style>
+    body {{
+      font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0b0f19;
+      color: #e2e8f0;
+      margin: 0;
+      padding: 16px;
+      line-height: 1.7;
+    }}
+    .container {{
+      max-width: 900px;
+      margin: 0 auto;
+      background: #151d2f;
+      padding: 24px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+      border: 1px solid #2d3b55;
+    }}
+    .top-bar {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid #2d3b55;
+    }}
+    .title-box h1 {{
+      font-size: 20px;
+      color: #38bdf8;
+      margin: 0 0 4px 0;
+    }}
+    .title-box p {{
+      font-size: 13px;
+      color: #94a3b8;
+      margin: 0;
+    }}
+    .btn-download {{
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: white;
+      text-decoration: none;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+    }}
+    pre {{
+      direction: ltr;
+      text-align: left;
+      border-radius: 12px;
+      overflow-x: auto;
+      background: #060911 !important;
+      padding: 14px;
+      border: 1px solid #2d3b55;
+    }}
+    code {{
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+    }}
+    h1, h2, h3, h4 {{
+      color: #f8fafc;
+      margin-top: 28px;
+      margin-bottom: 12px;
+    }}
+    h2 {{
+      border-bottom: 2px solid #38bdf8;
+      padding-bottom: 8px;
+    }}
+    hr {{
+      border: 0;
+      height: 1px;
+      background: #2d3b55;
+      margin: 32px 0;
+    }}
+    p, li {{
+      color: #cbd5e1;
+      font-size: 15px;
+    }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-bar">
+      <div class="title-box">
+        <h1>✨ hekayati_latest.md (كود النسخة الفعلية الشغالة)</h1>
+        <p>يحتوي على كافة ملفات تطبيق الموبايل وسيرفر الباك إند وصفحة الحجز</p>
+      </div>
+      <a href="/download-latest-md" class="btn-download">⬇️ تحميل الملف كـ MD</a>
+    </div>
+    <div id="content"></div>
+  </div>
+  <script>
+    const markdown = `{content_escaped}`;
+    marked.setOptions({{
+      highlight: function(code, lang) {{
+        return hljs.highlightAuto(code).value;
+      }}
+    }});
+    document.getElementById('content').innerHTML = marked.parse(markdown);
+  </script>
+</body>
+</html>"""
 
 
 @app.get("/download-md")
@@ -2289,13 +2428,14 @@ def install_page():
   <title>مركز تنزيل حكاياتي الملونة (عبر الواي فاي)</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 24px 16px; background: #fdf8ff; color: #333; margin: 0; }
-    .card { background: white; padding: 28px 18px; border-radius: 24px; box-shadow: 0 10px 30px rgba(126,34,206,0.12); max-width: 420px; margin: 16px auto; border: 1px solid #f3e8ff; }
+    .card { background: white; padding: 28px 18px; border-radius: 24px; box-shadow: 0 10px 30px rgba(126,34,206,0.12); max-width: 440px; margin: 16px auto; border: 1px solid #f3e8ff; }
     h1 { color: #6b21a8; margin: 10px 0 4px; font-size: 22px; font-weight: 800; }
     p { color: #6b7280; font-size: 14px; line-height: 1.5; margin: 0 0 18px 0; }
     .btn { display: block; color: white; padding: 13px 18px; border-radius: 14px; text-decoration: none; font-size: 15px; font-weight: bold; margin-bottom: 10px; transition: transform 0.15s; }
     .btn:active { transform: scale(0.98); }
+    .btn-latest { background: linear-gradient(135deg, #0284c7, #2563eb); box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35); }
     .btn-md { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3); }
-    .btn-code { background: linear-gradient(135deg, #0284c7, #0369a1); box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3); }
+    .btn-code { background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3); }
     .btn-apk { background: linear-gradient(135deg, #9333ea, #7e22ce); box-shadow: 0 4px 14px rgba(126, 34, 206, 0.3); }
     .btn-order { background: linear-gradient(135deg, #ec4899, #db2777); box-shadow: 0 4px 14px rgba(236, 72, 153, 0.3); }
     .badge { display: inline-block; background: #faf5ff; color: #7e22ce; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 12px; border: 1px solid #e9d5ff; }
@@ -2308,8 +2448,8 @@ def install_page():
     <div class="badge">متصل بشبكة الواي فاي المحلية 📶</div>
     <p>اختر ما تريد فتحه أو تحميله مباشرة إلى هاتفك:</p>
     
-    <a href="/playbook" class="btn btn-md">📄 فتح وتصفح ملف (Playbook.md) على الموبايل</a>
-    <a href="/download-md" class="btn btn-md" style="background: #047857;">⬇️ تحميل ملف Playbook.md كملف</a>
+    <a href="/latest" class="btn btn-latest">✨ فتح وتصفح ملف (hekayati_latest.md) بالمتصفح</a>
+    <a href="/download-latest-md" class="btn btn-latest" style="background: #0369a1;">⬇️ تحميل ملف hekayati_latest.md كملف</a>
     <a href="/download-code" class="btn btn-code">📦 تحميل كل الأكواد (ملف ZIP)</a>
     <a href="/download-apk" class="btn btn-apk">📲 تحميل تطبيق الموبايل (APK)</a>
     <a href="/order" class="btn btn-order">🌐 فتح صفحة حجز العملاء المسبق</a>
@@ -3000,6 +3140,9 @@ import '../models/order_model.dart';
 class ApiException implements Exception {
   final String message;
   ApiException(this.message);
+
+  @override
+  String toString() => message;
 }
 
 class SingleArtResponse {
@@ -3105,6 +3248,10 @@ class ApiService {
       return SingleArtResponse.fromJson(jsonDecode(utf8.decode(res.bodyBytes)));
     } on SocketException {
       throw ApiException('تعذر الاتصال بالسيرفر 📶 تأكد من اتصال الهاتف بالواي فاي');
+    } on TimeoutException {
+      throw ApiException('السيرفر أخد وقتاً أطول من المتوقع، جرّب تاني');
+    } on http.ClientException {
+      throw ApiException('تعذر الاتصال بالسيرفر 📶 تأكد من اتصال الهاتف بالواي فاي');
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException('حصلت مشكلة في توليد اللوحة ($e)');
@@ -3146,6 +3293,10 @@ class ApiService {
       return list.map((e) => CustomerOrder.fromJson(e)).toList();
     } on SocketException {
       throw ApiException('تعذر الاتصال بالسيرفر 📶 اتأكد من الواي فاي');
+    } on TimeoutException {
+      throw ApiException('السيرفر بطيء أو لا يستجيب، جرّب تاني');
+    } on http.ClientException {
+      throw ApiException('تعذر الاتصال بالسيرفر 📶');
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException('حدث خطأ أثناء تحميل الطلبات ($e)');
@@ -3162,6 +3313,12 @@ class ApiService {
         throw ApiException('تعذر معالجة الطلب (${res.statusCode})');
       }
       return jsonDecode(utf8.decode(res.bodyBytes));
+    } on SocketException {
+      throw ApiException('تعذر الاتصال بالسيرفر 📶 اتأكد من الواي فاي');
+    } on TimeoutException {
+      throw ApiException('السيرفر بطيء أو لا يستجيب، جرّب تاني');
+    } on http.ClientException {
+      throw ApiException('تعذر الاتصال بالسيرفر 📶');
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException('خطأ في معالجة الطلب ($e)');
@@ -3201,6 +3358,7 @@ class ApiService {
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -3210,12 +3368,51 @@ import 'package:share_plus/share_plus.dart';
 import '../models/book.dart';
 
 class PdfBuilder {
+  /// Local picked image wins; otherwise fetch the AI image from imageUrl.
+  static Future<pw.ImageProvider?> _resolvePageImage(BookPage page) async {
+    final local = page.localImagePath;
+    if (local != null && local.isNotEmpty && File(local).existsSync()) {
+      try {
+        final bytes = await File(local).readAsBytes();
+        if (_isSupportedImage(bytes)) return pw.MemoryImage(bytes);
+      } catch (_) {}
+    }
+
+    final url = page.imageUrl.trim();
+    if (url.isEmpty) return null;
+    try {
+      final res = await http
+          .get(Uri.parse(url))
+          .timeout(const Duration(seconds: 30));
+      if (res.statusCode == 200 && _isSupportedImage(res.bodyBytes)) {
+        return pw.MemoryImage(res.bodyBytes);
+      }
+    } catch (_) {
+      // Network/timeout/bad URL: fall back to the placeholder box.
+    }
+    return null;
+  }
+
+  /// PNG or JPEG magic bytes only. Prevents a bad payload from crashing pdf.save().
+  static bool _isSupportedImage(Uint8List b) {
+    if (b.length < 4) return false;
+    final isPng = b[0] == 0x89 && b[1] == 0x50 && b[2] == 0x4E && b[3] == 0x47;
+    final isJpeg = b[0] == 0xFF && b[1] == 0xD8;
+    return isPng || isJpeg;
+  }
+
   static Future<Uint8List> generate(Book book) async {
     final pdf = pw.Document();
 
     // Load Arabic Font
-    final arabicFont = await PdfGoogleFonts.cairoRegular();
-    final arabicBold = await PdfGoogleFonts.cairoBold();
+    final pw.Font arabicFont;
+    final pw.Font arabicBold;
+    try {
+      arabicFont = await PdfGoogleFonts.cairoRegular();
+      arabicBold = await PdfGoogleFonts.cairoBold();
+    } catch (_) {
+      throw Exception('تعذر تحميل خط Cairo، تأكد من اتصال الإنترنت');
+    }
 
     // 1. Cover Page
     pdf.addPage(
@@ -3236,7 +3433,10 @@ class PdfBuilder {
                     border: pw.Border.all(color: PdfColors.purple800, width: 3),
                   ),
                   child: pw.Center(
-                    child: pw.Text('📖', style: const pw.TextStyle(fontSize: 44)),
+                    child: pw.Text(
+                      book.title.isNotEmpty ? book.title.substring(0, 1) : 'ح',
+                      style: const pw.TextStyle(fontSize: 40, color: PdfColors.purple800),
+                    ),
                   ),
                 ),
                 pw.SizedBox(height: 24),
@@ -3285,16 +3485,13 @@ class PdfBuilder {
     );
 
     // 2. Story Pages
+    // Resolve all page images in parallel (local file first, then AI imageUrl).
+    final List<pw.ImageProvider?> pageImages =
+        await Future.wait(book.pages.map(_resolvePageImage));
+
     for (int i = 0; i < book.pages.length; i++) {
       final page = book.pages[i];
-      pw.ImageProvider? imageProvider;
-
-      if (page.localImagePath != null && File(page.localImagePath!).existsSync()) {
-        try {
-          final bytes = await File(page.localImagePath!).readAsBytes();
-          imageProvider = pw.MemoryImage(bytes);
-        } catch (_) {}
-      }
+      final pw.ImageProvider? imageProvider = pageImages[i];
 
       pdf.addPage(
         pw.Page(
@@ -3713,6 +3910,7 @@ class SingleArtScreen extends StatefulWidget {
 
 class _SingleArtScreenState extends State<SingleArtScreen> {
   final _textController = TextEditingController();
+  final _heroController = TextEditingController();
   final _rec = AudioRecorder();
   
   bool _useVoice = false;
@@ -3730,6 +3928,7 @@ class _SingleArtScreenState extends State<SingleArtScreen> {
   @override
   void dispose() {
     _textController.dispose();
+    _heroController.dispose();
     _timer?.cancel();
     _rec.dispose();
     super.dispose();
@@ -3760,6 +3959,7 @@ class _SingleArtScreenState extends State<SingleArtScreen> {
       _recordSeconds = 0;
       _audioPath = path;
     });
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (!mounted) return;
       setState(() => _recordSeconds++);
@@ -3769,23 +3969,53 @@ class _SingleArtScreenState extends State<SingleArtScreen> {
 
   Future<void> _stopRecording() async {
     _timer?.cancel();
-    final path = await _rec.stop();
+    String? path;
+    try {
+      path = await _rec.stop();
+    } catch (_) {}
+    if (!mounted) return;
     setState(() {
       _recording = false;
-      _audioPath = path;
+      if (path != null) _audioPath = path;
     });
-    _snack('تم تسجيل فكرتك بنجاح 🎙️');
+    _snack(path != null ? 'تم تسجيل فكرتك بنجاح 🎙️' : 'تعذر حفظ التسجيل، جرّب تاني');
+  }
+
+  /// Mirrors backend clean_name(): letters and spaces only, max 20 chars.
+  String _cleanHeroName(String raw) {
+    final cleaned = raw
+        .replaceAll(RegExp(r'[^A-Za-z\u0600-\u06FF ]'), '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    return cleaned.length > 20 ? cleaned.substring(0, 20).trim() : cleaned;
   }
 
   Future<void> _generate() async {
-    final textDesc = _textController.text.trim();
-    if (!_useVoice && textDesc.isEmpty) {
+    if (_loading) return;
+    if (_recording) {
+      _snack('أوقف التسجيل أولاً ⏹️');
+      return;
+    }
+
+    final rawDesc = _textController.text.trim();
+    final heroName = _cleanHeroName(_heroController.text);
+
+    if (!_useVoice && rawDesc.isEmpty) {
       _snack('يرجى كتابة وصف للرسمة التي تتخيلها ✍️');
       return;
     }
     if (_useVoice && (_audioPath == null || !File(_audioPath!).existsSync())) {
       _snack('يرجى تسجيل فكرتك بالمايك أولاً 🎤');
       return;
+    }
+
+    // Voice mode: send ONLY the name hint (the hidden text field is ignored).
+    // Text mode: prefix the description with the hero name.
+    final String textDesc;
+    if (_useVoice) {
+      textDesc = heroName.isNotEmpty ? 'اسم المبدع/البطل: $heroName' : '';
+    } else {
+      textDesc = heroName.isNotEmpty ? 'اسم المبدع/البطل: $heroName. $rawDesc' : rawDesc;
     }
 
     setState(() => _loading = true);
@@ -3802,7 +4032,9 @@ class _SingleArtScreenState extends State<SingleArtScreen> {
       if (!mounted) return;
       _showResultDialog(res);
     } catch (e) {
-      if (mounted) _snack(e.toString().replaceAll('ApiException: ', ''));
+      if (mounted) {
+        _snack(e.toString().replaceAll('ApiException: ', ''));
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -3925,6 +4157,23 @@ class _SingleArtScreenState extends State<SingleArtScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Text('اسم المبدع / البطل:',
+                style: text.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _heroController,
+              maxLength: 20,
+              textInputAction: TextInputAction.next,
+              decoration: InputDecoration(
+                hintText: 'مثلاً: ليلى أو يوسف (اختياري)',
+                prefixIcon: const Icon(Icons.person_outline),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                filled: true,
+                fillColor: Colors.grey.shade50,
+              ),
+            ),
+            const SizedBox(height: 16),
+
             // Mode toggle: text vs voice
             Row(
               children: [
@@ -3932,7 +4181,10 @@ class _SingleArtScreenState extends State<SingleArtScreen> {
                   child: ChoiceChip(
                     label: const Center(child: Text('كتابة نص الوصف ✍️')),
                     selected: !_useVoice,
-                    onSelected: (v) => setState(() => _useVoice = false),
+                    onSelected: (v) async {
+                      if (_recording) await _stopRecording();
+                      if (mounted) setState(() => _useVoice = false);
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -3940,7 +4192,10 @@ class _SingleArtScreenState extends State<SingleArtScreen> {
                   child: ChoiceChip(
                     label: const Center(child: Text('تسجيل بالصوت 🎤')),
                     selected: _useVoice,
-                    onSelected: (v) => setState(() => _useVoice = true),
+                    onSelected: (v) async {
+                      if (_recording) await _stopRecording();
+                      if (mounted) setState(() => _useVoice = true);
+                    },
                   ),
                 ),
               ],
@@ -4580,6 +4835,7 @@ class BookingScreen extends StatefulWidget {
 
 class _BookingScreenState extends State<BookingScreen> {
   final _name = TextEditingController();
+  final _ipController = TextEditingController();
   String? _gender;               // no default: the parent must choose
   String? _age;                  // no default: the parent must choose
   String _artStyle = 'classic';  // classic | manga | mandala | sketch
@@ -4588,6 +4844,7 @@ class _BookingScreenState extends State<BookingScreen> {
   @override
   void dispose() {
     _name.dispose();
+    _ipController.dispose();
     super.dispose();
   }
 
@@ -4609,7 +4866,8 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   void _showServerSettings(BuildContext context) {
-    final ipController = TextEditingController(text: ApiService.baseUrl);
+    _ipController.text = ApiService.baseUrl;
+    final ipController = _ipController;
     String status = '';
     showDialog(
       context: context,
@@ -4969,8 +5227,11 @@ class _BookScreenState extends State<BookScreen> {
     try {
       await job();
       if (mounted) _snack(ok);
-    } catch (_) {
-      if (mounted) _snack('حصلت مشكلة، جرّب تاني 😢');
+    } catch (e) {
+      debugPrint('Book action failed: $e');
+      if (mounted) {
+        _snack('حصلت مشكلة: ${e.toString().replaceFirst('Exception: ', '')}');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -4984,6 +5245,7 @@ class _BookScreenState extends State<BookScreen> {
         maxHeight: 1600,
         imageQuality: 90,
       );
+      if (!mounted) return;
       if (img != null) {
         setState(() {
           page.localImagePath = img.path;
@@ -4991,7 +5253,7 @@ class _BookScreenState extends State<BookScreen> {
         _snack('تمت إضافة رسمة صفحة ${page.pageNumber} بنجاح! 🎨');
       }
     } catch (e) {
-      _snack('تعذر فتح المعرض 📷');
+      if (mounted) _snack('تعذر فتح المعرض 📷');
     }
   }
 
@@ -5002,6 +5264,7 @@ class _BookScreenState extends State<BookScreen> {
         maxHeight: 1600,
         imageQuality: 90,
       );
+      if (!mounted) return;
       if (images.isNotEmpty) {
         setState(() {
           for (int i = 0; i < images.length && i < widget.book.pages.length; i++) {
@@ -5011,7 +5274,7 @@ class _BookScreenState extends State<BookScreen> {
         _snack('تم تعيين ${images.length} صورة للصفحات بنجاح! 🖼️');
       }
     } catch (e) {
-      _snack('تعذر اختيار الصور 📷');
+      if (mounted) _snack('تعذر اختيار الصور 📷');
     }
   }
 
@@ -5031,7 +5294,9 @@ class _BookScreenState extends State<BookScreen> {
   }
 
   Widget _cover(TextTheme text, int totalPages) {
-    int imagesAttached = widget.book.pages.where((p) => p.localImagePath != null).length;
+    int imagesAttached = widget.book.pages
+        .where((p) => p.localImagePath != null || p.imageUrl.isNotEmpty)
+        .length;
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
